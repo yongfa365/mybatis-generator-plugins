@@ -10,7 +10,7 @@ id|Url
 整个执行过程都是在处理一些内存对象，最终所有plug执行完才写入。
 
 ```xml
- <context id="xxxxxxx" targetRuntime="MyBatis3" defaultModelType="flat">
+ <context id="yongfa365.mybaits.generator" targetRuntime="MyBatis3" defaultModelType="flat">
         <property name="javaFileEncoding" value="UTF-8"/>
         <!-- 可以用这种跳过删除某些目录-->
         <!-- <plugin type="yongfa365.mybaits.generator.plugins.DeleteGeneratedFilesPlugin">-->
@@ -37,6 +37,23 @@ id|Url
         <plugin type="yongfa365.mybaits.generator.plugins.JpaAnnotationPlugin"/>
         
         <!--为Model加上javadoc，内容是数据库备注-->
-        <commentGenerator type="yongfa365.mybaits.generator.plugins.DatabaseCommentGenerator" />
+        <commentGenerator type="yongfa365.mybaits.generator.plugins.DatabaseCommentGenerator">
+            <property name="suppressDate" value="true"/>
+            <!--yongfa365插件未遵守此约定-->
+            <!--<property name="suppressAllComments" value="true"/>-->
+        </commentGenerator>
+
+
+        <jdbcConnection driverClass="com.microsoft.sqlserver.jdbc.SQLServerDriver"
+                        connectionURL="jdbc:sqlserver://127.0.0.1;DatabaseName=XXXXDB"
+                        userId="sa"
+                        password="********">
+        </jdbcConnection>
+
+        <javaTypeResolver>
+            <property name="forceBigDecimals" value="false"/>
+            <!-- 简单说就是生成 LocalDateTime而不是Date -->
+            <property name="useJSR310Types" value="true"/>
+        </javaTypeResolver>
 </context>
 ```
