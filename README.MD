@@ -25,10 +25,13 @@ id|Url
         <plugin type="yongfa365.mybaits.generator.plugins.FixSqlServerCommentPlugin"/>
         
         <!--为Model加上Swagger的注解-->
-        <plugin type="yongfa365.mybaits.generator.plugins.SwaggerPlugin"/>
+        <plugin type="yongfa365.mybaits.generator.plugins.SwaggerAnnotationPlugin"/>
+        
+        <!--为Model加上Swagger2的注解-->
+        <plugin type="yongfa365.mybaits.generator.plugins.Swagger2AnnotationPlugin"/>
         
         <!--为Model加上lombok的import及自己想在类上加的注解，都是以|分割-->
-        <plugin type="yongfa365.mybaits.generator.plugins.LombokPlugin">
+        <plugin type="yongfa365.mybaits.generator.plugins.LombokAnnotationPlugin">
             <property name="imports" value="lombok.*|lombok.experimental.*"/>
             <property name="annotations" value="@Data|@Builder|@AllArgsConstructor|@NoArgsConstructor"/>
         </plugin>
@@ -39,8 +42,8 @@ id|Url
         <!--为Model加上javadoc，内容是数据库备注-->
         <commentGenerator type="yongfa365.mybaits.generator.plugins.DatabaseCommentGenerator">
             <property name="suppressDate" value="true"/>
-            <!--yongfa365插件未遵守此约定-->
-            <!--<property name="suppressAllComments" value="true"/>-->
+            <!--yongfa365生成实体备注的插件不关注此设置-->
+            <property name="suppressAllComments" value="false"/>
         </commentGenerator>
 
 

@@ -10,7 +10,7 @@ import org.mybatis.generator.internal.util.StringUtility;
 
 import java.util.List;
 
-public class SwaggerPlugin extends PluginAdapter {
+public class Swagger2AnnotationPlugin extends PluginAdapter {
 
     @Override
     public boolean validate(List<String> list) {
@@ -36,12 +36,11 @@ public class SwaggerPlugin extends PluginAdapter {
     }
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        topLevelClass.addImportedType("io.swagger.annotations.ApiModelProperty");
-        topLevelClass.addImportedType("io.swagger.annotations.ApiModel");
+        topLevelClass.addImportedType("io.swagger.v3.oas.annotations.media.Schema");
 
         String remarks = introspectedTable.getRemarks();
         if (StringUtility.stringHasValue(remarks)) {
-            topLevelClass.addAnnotation(String.format("@ApiModel(\"%s\")",remarks));
+            topLevelClass.addAnnotation(String.format("@Schema(description = \"%s\")",remarks));
         }
         return true;
     }
@@ -50,7 +49,7 @@ public class SwaggerPlugin extends PluginAdapter {
     public boolean modelFieldGenerated(Field field, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable, ModelClassType modelClassType) {
         String remarks = introspectedColumn.getRemarks();
         if (StringUtility.stringHasValue(remarks)) {
-            field.addAnnotation(String.format("@ApiModelProperty(value = \"%s\")",remarks));
+            field.addAnnotation(String.format("@Schema(description = \"%s\")",remarks));
         }
         return true;
     }

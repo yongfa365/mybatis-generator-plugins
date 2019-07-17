@@ -10,7 +10,7 @@ import org.mybatis.generator.api.dom.java.TopLevelClass;
 import java.util.List;
 
 
-public class LombokPlugin extends PluginAdapter {
+public class LombokAnnotationPlugin extends PluginAdapter {
     @Override
     public boolean validate(List<String> list) {
         return true;
