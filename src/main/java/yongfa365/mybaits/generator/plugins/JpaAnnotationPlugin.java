@@ -111,20 +111,7 @@ public class JpaAnnotationPlugin extends PluginAdapter {
 
         //========================Fix PK （视图没有主键）===========================
         if (pkCount == 0) {
-            Optional<IntrospectedColumn> first = introspectedTable.getAllColumns().stream()
-                    .filter(p -> !p.isNullable() && p.getFullyQualifiedJavaType() == FullyQualifiedJavaType.getIntInstance())
-                    .findFirst();
-            if (!first.isPresent()) {
-                first = introspectedTable.getAllColumns().stream().filter(p -> !p.isNullable()).findFirst();
-                if (!first.isPresent()) {
-                    first = introspectedTable.getAllColumns().stream()
-                            .filter(p -> p.getFullyQualifiedJavaType() == FullyQualifiedJavaType.getIntInstance())
-                            .findFirst();
-                } else {
-                    first = introspectedTable.getAllColumns().stream().findFirst();
-                }
-            }
-
+            Optional<IntrospectedColumn> first = introspectedTable.getAllColumns().stream().findFirst();
             if (first.isPresent() && first.get().equals(introspectedColumn)) {
                 System.out.println("[WARN] No Id Add One! TableName:" + tableName + " ColumnName:" + columnName);
                 field.addAnnotation("@Id //没有主键但Jpa要，选择了他");
