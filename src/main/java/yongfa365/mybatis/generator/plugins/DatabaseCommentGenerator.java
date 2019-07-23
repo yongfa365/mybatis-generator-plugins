@@ -1,4 +1,4 @@
-package yongfa365.mybaits.generator.plugins;
+package yongfa365.mybatis.generator.plugins;
 
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -7,7 +7,7 @@ import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
 import org.mybatis.generator.internal.DefaultCommentGenerator;
 import org.mybatis.generator.internal.util.StringUtility;
-import yongfa365.mybaits.generator.Utils.RemarkUtil;
+import yongfa365.mybatis.generator.Utils.RemarkUtil;
 
 //Comment比较特殊FixSqlServerComment后这里拿不到，其他AdapterPlugin里可以拿到
 public class DatabaseCommentGenerator extends DefaultCommentGenerator {

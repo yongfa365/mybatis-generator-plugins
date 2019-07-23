@@ -10,37 +10,43 @@ id|Url
 整个执行过程都是在处理一些内存对象，最终所有plug执行完才写入。
 
 ```xml
- <context id="yongfa365.mybaits.generator" targetRuntime="MyBatis3" defaultModelType="flat">
+ <context id="yongfa365.mybatis.generator" targetRuntime="MyBatis3" defaultModelType="flat">
         <property name="javaFileEncoding" value="UTF-8"/>
         <!-- 可以用这种跳过删除某些目录-->
-        <!-- <plugin type="yongfa365.mybaits.generator.plugins.DeleteGeneratedFilesPlugin">-->
+        <!-- <plugin type="yongfa365.mybatis.generator.plugins.DeleteGeneratedFilesPlugin">-->
         <!--     <property name="deleteJavaModel" value="false"/>-->
         <!--     <property name="deleteSqlMap" value="false"/>-->
         <!--     <property name="deleteJavaClient" value="false"/>-->
         <!-- </plugin>-->
         <!--删除所有自动生成的目标目录里的文件，默认是全删除，一般要放在最前面-->
-        <plugin type="yongfa365.mybaits.generator.plugins.DeleteGeneratedFilesPlugin"/>
+        <plugin type="yongfa365.mybatis.generator.plugins.DeleteGeneratedFilesPlugin"/>
         
-        <!--MyBaits Generator 1.3.7还没有实现生成MSSQL  SqlServer备注，用插件填充上，之后再使用就有了，应该放的尽可能靠前-->
-        <plugin type="yongfa365.mybaits.generator.plugins.FixSqlServerCommentPlugin"/>
+        <!--MyBatis Generator 1.3.7还没有实现生成MSSQL  SqlServer备注，用插件填充上，之后再使用就有了，应该放的尽可能靠前-->
+        <plugin type="yongfa365.mybatis.generator.plugins.FixSqlServerCommentPlugin"/>
         
         <!--为Model加上Swagger的注解-->
-        <plugin type="yongfa365.mybaits.generator.plugins.SwaggerAnnotationPlugin"/>
+        <plugin type="yongfa365.mybatis.generator.plugins.SwaggerAnnotationPlugin"/>
         
         <!--为Model加上Swagger2的注解-->
-        <plugin type="yongfa365.mybaits.generator.plugins.Swagger2AnnotationPlugin"/>
+        <plugin type="yongfa365.mybatis.generator.plugins.Swagger2AnnotationPlugin"/>
         
         <!--为Model加上lombok的import及自己想在类上加的注解，都是以|分割-->
-        <plugin type="yongfa365.mybaits.generator.plugins.LombokAnnotationPlugin">
+        <plugin type="yongfa365.mybatis.generator.plugins.LombokAnnotationPlugin">
             <property name="imports" value="lombok.*|lombok.experimental.*"/>
             <property name="annotations" value="@Data|@Builder|@AllArgsConstructor|@NoArgsConstructor"/>
         </plugin>
         
         <!--为Model加上Jpa注解@Entity,@Id,@Table,@Column等-->
-        <plugin type="yongfa365.mybaits.generator.plugins.JpaAnnotationPlugin"/>
+        <plugin type="yongfa365.mybatis.generator.plugins.JpaAnnotationPlugin"/>
+        
+        <!--name要唯一，格式：类名 类型 字段名；value：备注-->
+        <plugin type="yongfa365.mybatis.generator.plugins.AddTransientFieldPlugin">
+            <property name="表一 Integer isApproved" value="审批状态"/>
+            <property name="表二 Integer isApproved" value="审批状态"/>
+        </plugin>
         
         <!--为Model加上javadoc，内容是数据库备注-->
-        <commentGenerator type="yongfa365.mybaits.generator.plugins.DatabaseCommentGenerator">
+        <commentGenerator type="yongfa365.mybatis.generator.plugins.DatabaseCommentGenerator">
             <property name="suppressDate" value="true"/>
             <!--yongfa365生成实体备注的插件不关注此设置-->
             <property name="suppressAllComments" value="false"/>
@@ -52,8 +58,9 @@ id|Url
                         userId="sa"
                         password="********">
         </jdbcConnection>
-
-        <javaTypeResolver>
+        
+         <!--tinyint默认转为Byte了，精度不够，改成Integer-->
+        <javaTypeResolver type="yongfa365.mybatis.generator.plugins.JavaTypeResolverDefaultImpl">
             <property name="forceBigDecimals" value="false"/>
             <!-- 简单说就是生成 LocalDateTime而不是Date -->
             <property name="useJSR310Types" value="true"/>

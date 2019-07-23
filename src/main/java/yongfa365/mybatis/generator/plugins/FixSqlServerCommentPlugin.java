@@ -1,11 +1,11 @@
-package yongfa365.mybaits.generator.plugins;
+package yongfa365.mybatis.generator.plugins;
 
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.Field;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
-import yongfa365.mybaits.generator.Utils.RemarkUtil;
+import yongfa365.mybatis.generator.Utils.RemarkUtil;
 
 import java.util.List;
 
