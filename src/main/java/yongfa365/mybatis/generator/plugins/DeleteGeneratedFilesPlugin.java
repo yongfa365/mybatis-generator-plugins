@@ -1,6 +1,7 @@
 package yongfa365.mybatis.generator.plugins;
 
 import org.mybatis.generator.api.PluginAdapter;
+import yongfa365.mybatis.generator.Utils.ContextUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,26 +44,17 @@ public class DeleteGeneratedFilesPlugin extends PluginAdapter {
 
     private void deleteIt() throws Exception {
         if (deleteJavaClient) {
-            Path path = Paths.get(
-                    context.getJavaClientGeneratorConfiguration().getTargetProject().replace(".", "/"),
-                    context.getJavaClientGeneratorConfiguration().getTargetPackage().replace(".", "/"));
-
+            Path path = ContextUtils.getDaoPath(context);
             deleteFilesInPath(path, "JavaClient");
         }
 
         if (deleteJavaModel) {
-            Path path = Paths.get(
-                    context.getJavaModelGeneratorConfiguration().getTargetProject().replace(".", "/"),
-                    context.getJavaModelGeneratorConfiguration().getTargetPackage().replace(".", "/"));
-
+            Path path =  ContextUtils.getModelPath(context);
             deleteFilesInPath(path, "JavaModel");
         }
 
         if (deleteSqlMap) {
-            Path path = Paths.get(
-                    context.getSqlMapGeneratorConfiguration().getTargetProject().replace(".", "/"),
-                    context.getSqlMapGeneratorConfiguration().getTargetPackage().replace(".", "/"));
-
+            Path path =  ContextUtils.getXmlPath(context);
             deleteFilesInPath(path, "SqlMap");
         }
     }
