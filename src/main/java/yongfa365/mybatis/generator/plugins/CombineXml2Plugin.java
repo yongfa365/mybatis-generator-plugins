@@ -14,6 +14,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import yongfa365.mybatis.generator.Utils.XmlUtils;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -28,16 +29,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * User:zhangweixiao
- * Description:
- * old nodes is your existing xml file's first level nodes,like <insert><resultMap>
- * new nodes is mybatis-generator generate for you to combine
- * This compare the first level node's name and "id" attribute of new nodes and old nodes
- * if the two equal,then new node will not generate
- * so this can make you modification in old nodes not override.
- * if you want to regenrate old node,delete it,it will generate new.
- */
+//自动合并会对attribute排序、转义、格式化，也就是会改你写的东西，能忍受得了的就用吧
 public class CombineXml2Plugin extends PluginAdapter {
     //shellCallback use TargetProject and TargetPackage to get targetFile
     ShellCallback shellCallback = new DefaultShellCallback(false);
@@ -76,7 +68,7 @@ public class CombineXml2Plugin extends PluginAdapter {
 
 
 
-            Document oldDoc = getDocFromFile(xmlFile);
+            Document oldDoc = XmlUtils.getDocFromFile(xmlFile);
             org.w3c.dom.Element rootElement = oldDoc.getDocumentElement();
             NodeList oldNodeList = rootElement.getChildNodes();
 
@@ -129,29 +121,4 @@ public class CombineXml2Plugin extends PluginAdapter {
         return true;
     }
 
-    private Document getDocFromFile(File xmlFile) throws Exception {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setExpandEntityReferences(false);
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        builder.setEntityResolver(new NullEntityResolver());
-
-        Document existingDocument = builder.parse(xmlFile);
-        return existingDocument;
-    }
-
-    private class NullEntityResolver implements EntityResolver {
-        /**
-         * returns an empty reader. This is done so that the parser doesn't
-         * attempt to read a DTD. We don't need that support for the merge and
-         * it can cause problems on systems that aren't Internet connected.
-         */
-        @Override
-        public InputSource resolveEntity(String publicId, String systemId)
-                throws SAXException, IOException {
-
-            StringReader sr = new StringReader(""); //$NON-NLS-1$
-
-            return new InputSource(sr);
-        }
-    }
 }
