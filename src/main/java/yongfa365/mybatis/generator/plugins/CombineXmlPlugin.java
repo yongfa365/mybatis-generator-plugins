@@ -4,28 +4,22 @@ import org.mybatis.generator.api.GeneratedXmlFile;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.ShellCallback;
-import org.mybatis.generator.api.dom.xml.Element;
 import org.mybatis.generator.internal.DefaultShellCallback;
 import org.mybatis.generator.internal.DomWriter;
 import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,26 +34,12 @@ import java.util.regex.Pattern;
  * if you want to regenrate old node,delete it,it will generate new.
  */
 public class CombineXmlPlugin extends PluginAdapter {
+
     //shellCallback use TargetProject and TargetPackage to get targetFile
     ShellCallback shellCallback = new DefaultShellCallback(false);
-    //save new nodes
-    org.mybatis.generator.api.dom.xml.Document document;
 
     @Override
     public boolean validate(List<String> warnings) {
-        return true;
-    }
-
-    /**
-     * assing document variable to get new nodes
-     *
-     * @param document
-     * @param introspectedTable
-     * @return
-     */
-    @Override
-    public boolean sqlMapDocumentGenerated(org.mybatis.generator.api.dom.xml.Document document, IntrospectedTable introspectedTable) {
-        this.document = document;
         return true;
     }
 
@@ -74,56 +54,38 @@ public class CombineXmlPlugin extends PluginAdapter {
             if (!directory.exists() || !xmlFile.exists()) {
                 return true;
             }
+            String oldFileString = new String(Files.readAllBytes(xmlFile.toPath()), StandardCharsets.UTF_8);
 
 
+            Document newDoc = getDocumentBuilder().parse(new InputSource(new StringReader(sqlMap.getFormattedContent())));
+            String newFileString = new DomWriter().toString(newDoc);
+            Pattern re = Pattern.compile("<(\\S+)\\s+id=\"(\\S+)\"");
 
-            Document oldDoc = getDocFromFile(xmlFile);
-            org.w3c.dom.Element rootElement = oldDoc.getDocumentElement();
-            NodeList oldNodeList = rootElement.getChildNodes();
-
-            //get new nodes
-            List<Element> newElements = document.getRootElement().getElements();
-
-            //get nodeName and the value of id attribute use regex
-            Pattern p = Pattern.compile("<(\\w+)\\s+id=\"(\\w+)\"");
-
-            Set<Node> needDeleteNodes = new HashSet<Node>();
-            boolean findSameNode = false;
-            // traverse new nodes to compare old nodes to filter
-            for (Iterator<Element> newElement = newElements.iterator(); newElement.hasNext(); ) {
-                String newNodeName = "";
-                String NewIdValue = "";
-                Element element = newElement.next();
-                Matcher m = p.matcher(element.getFormattedContent(0));
-                if (m.find()) {
-                    //get nodeName and the value of id attribute
-                    newNodeName = m.group(1);
-                    NewIdValue = m.group(2);
-                }
-
-                for (int i = 0; i < oldNodeList.getLength(); i++) {
-                    Node oldNode = oldNodeList.item(i);
-                    if (oldNode.getNodeType() == Node.ELEMENT_NODE && newNodeName.equals(oldNode.getNodeName())) {
-                        NamedNodeMap attr = oldNode.getAttributes();
-                        Node id = attr.getNamedItem("id");
-                        if (id != null && id.getNodeValue().equals(NewIdValue)) {
-                            Node prev = oldNode.getPreviousSibling();
-                            //处理删除元素后，存在空行的问题 https://stackoverflow.com/a/14255174/1879111
-                            if (prev != null && prev.getNodeType() == Node.TEXT_NODE && prev.getNodeValue().trim().length() == 0) {
-                                needDeleteNodes.add(prev);
-                            }
-                            needDeleteNodes.add(oldNode);
-                        }
-                    }
-                }
+            //新的有的就在旧的里删掉
+            Matcher matcher = re.matcher(newFileString);
+            while (matcher.find()) {
+                String re2 = String.format("<{0}\\s+id=\"{1}\"[\\S\\s]+?</{0}>", matcher.group(1), matcher.group(2));
+                oldFileString = oldFileString.replaceAll(re2, "");
             }
 
-            for (Node node : needDeleteNodes) {
-                rootElement.removeChild(node);
-            }
+            //用新的内容除了最后一行外的，替换旧的里的文件的前半部分。
+            oldFileString = oldFileString.replaceAll("[\\S\\s]+?<mapper.+?>", "");
+
+            newFileString = newFileString.replace("</mapper>", oldFileString);
+
+            //            NodeList newNodeList = newDoc.getChildNodes();
+            //            for (int i = 0; i < newNodeList.getLength(); i++) {
+            //                Node node=newNodeList.item(i);
+            //
+            //                if (node.getNodeType() == Node.ELEMENT_NODE ){
+            //                    String re=String.format("<{0}\\s+id=\"{1}\"[\S\S]+?</{0}>",node.getNodeName(),node.getNodeValue());
+            //                    oldFileString.replaceAll("<"+, "");
+            //                }
+            //            }
+
             //MBG合并逻辑与我们预期不同，自行先处理下原XML文件
-            String oldXmlChanged = new DomWriter().toString(oldDoc);
-            Files.write(xmlFile.toPath(), oldXmlChanged.getBytes());
+
+            Files.write(xmlFile.toPath(), newFileString.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -131,13 +93,16 @@ public class CombineXmlPlugin extends PluginAdapter {
     }
 
     private Document getDocFromFile(File xmlFile) throws Exception {
+        Document existingDocument = getDocumentBuilder().parse(xmlFile);
+        return existingDocument;
+    }
+
+    private DocumentBuilder getDocumentBuilder() throws ParserConfigurationException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setExpandEntityReferences(false);
         DocumentBuilder builder = factory.newDocumentBuilder();
         builder.setEntityResolver(new NullEntityResolver());
-
-        Document existingDocument = builder.parse(xmlFile);
-        return existingDocument;
+        return builder;
     }
 
     private class NullEntityResolver implements EntityResolver {
