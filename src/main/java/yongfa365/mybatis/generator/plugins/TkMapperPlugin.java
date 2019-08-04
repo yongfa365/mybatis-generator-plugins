@@ -15,13 +15,13 @@ import org.mybatis.generator.internal.util.StringUtility;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import yongfa365.mybatis.generator.Utils.ContextUtils;
+import yongfa365.mybatis.generator.Utils.JavaFileUtils;
 import yongfa365.mybatis.generator.Utils.XmlUtils;
 
 import java.io.File;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,16 +53,26 @@ public class TkMapperPlugin extends PluginAdapter {
     //=============================Model=============================
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        // topLevelClass.
-        return true;
+        File modelFile = ContextUtils.getModelFile(context, introspectedTable);
+        if (modelFile.exists()) {
+            JavaFileUtils.mergerFile(context,topLevelClass,introspectedTable);
+
+            //已经是最终的了，合并后返回false，其他插件就不会再走整个方法了
+            return false;
+        } else {
+            //文件不存在就走正常创建的逻辑
+            return true;
+        }
+
+
     }
 
     //=============================DAO=============================
     @Override
     public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        File xmlFile = Paths.get(ContextUtils.getDaoPath(context).toString(), ContextUtils.getDaoFileName(introspectedTable)).toFile();
+        File xmlFile = ContextUtils.getDaoFile(context, introspectedTable);
         if (xmlFile.exists()) {
-            System.out.println(xmlFile+"已经存在，就不处理了");
+            System.out.println(xmlFile + "已经存在，就不处理了");
             return false;
         }
 
