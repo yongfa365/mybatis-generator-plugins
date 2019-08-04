@@ -4,6 +4,9 @@ import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.config.Context;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -43,5 +46,14 @@ public class ContextUtils {
         filename = filename.substring(filename.lastIndexOf(".")+1);
         File result = Paths.get(getModelPath(context).toString(), filename+".java").toFile();
         return  result;
+    }
+
+    public  static String  readAllString(Path path)
+    {
+        try {
+            return  new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

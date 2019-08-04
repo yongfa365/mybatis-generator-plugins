@@ -8,6 +8,7 @@ import org.mybatis.generator.internal.DefaultShellCallback;
 import org.mybatis.generator.internal.DomWriter;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
+import yongfa365.mybatis.generator.Utils.ContextUtils;
 import yongfa365.mybatis.generator.Utils.XmlUtils;
 
 import java.io.File;
@@ -37,7 +38,7 @@ public class CombineXmlPlugin extends PluginAdapter {
                 return true;
             }
 
-            String oldFileString = new String(Files.readAllBytes(xmlFile.toPath()), StandardCharsets.UTF_8);
+            String oldFileString = ContextUtils.readAllString(xmlFile.toPath());
 
             Document newDoc = XmlUtils.getDocumentBuilder().parse(new InputSource(new StringReader(sqlMap.getFormattedContent())));
             String newFileString = new DomWriter().toString(newDoc);
