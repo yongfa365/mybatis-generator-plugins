@@ -54,6 +54,7 @@ public class TkMapperPlugin extends PluginAdapter {
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         File modelFile = ContextUtils.getModelFile(context, introspectedTable);
+        System.out.println(modelFile);
         if (modelFile.exists()) {
             JavaFileUtils.mergerFile(context,topLevelClass,introspectedTable);
 

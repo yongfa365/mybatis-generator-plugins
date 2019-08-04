@@ -30,11 +30,6 @@ public class ContextUtils {
         return path;
     }
 
-    public static String getDaoFileName(IntrospectedTable introspectedTable) {
-        String filename = introspectedTable.getMyBatis3XmlMapperFileName();
-        filename = filename.replace(".xml", ".java");
-        return filename;
-    }
 
     public static File getDaoFile(Context context, IntrospectedTable introspectedTable) {
         String filename = introspectedTable.getMyBatis3XmlMapperFileName();
@@ -46,7 +41,7 @@ public class ContextUtils {
     public static File getModelFile(Context context, IntrospectedTable introspectedTable) {
         String filename = introspectedTable.getBaseRecordType();
         filename = filename.substring(filename.lastIndexOf(".")+1);
-        File result = Paths.get(getDaoPath(context).toString(), filename).toFile();
+        File result = Paths.get(getModelPath(context).toString(), filename+".java").toFile();
         return  result;
     }
 }
