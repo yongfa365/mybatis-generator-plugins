@@ -39,9 +39,11 @@ public class JavaFileUtils {
             CompilationUnit existingCompilationUnit = StaticJavaParser.parse(oldFileString);
 
             //旧的有而新的没有的imports，复制给新的
+            NodeList<ImportDeclaration> imports = new NodeList<>();
             NodeList<ImportDeclaration> oldimports = existingCompilationUnit.getImports();
-            oldimports.removeAll(existingCompilationUnit.getImports());
-            for (ImportDeclaration item : oldimports) {
+            imports.addAll(oldimports);
+            imports.removeAll(existingCompilationUnit.getImports());
+            for (ImportDeclaration item : imports) {
                 newFileString = newFileString.replaceAll("package .*?\\r\\n", "$0\\r\\n" + item.toString());
             }
 
@@ -53,19 +55,42 @@ public class JavaFileUtils {
             for (int i = 0; i < newTypes.size(); i++) {
 
                 //合并fields
-                List<FieldDeclaration> fields = newTypes.get(i).getFields();
+                List<FieldDeclaration> newFields = newTypes.get(i).getFields();
                 List<FieldDeclaration> oldFields = oldTypes.get(i).getFields();
-                List<FieldDeclaration> newFields = new ArrayList<>();
-                HashSet<FieldDeclaration> fieldDeclarations = new HashSet<>();
-
-                oldFields.removeAll(newFields);
+                List<FieldDeclaration> fields = new ArrayList<>();
+                fields.addAll(oldFields);
+                fields.removeAll(newFields);
+                if (fields.size() == 0) {
+                    continue;
+                }
                 StringBuilder stringBuilder = new StringBuilder();
-                newLine(stringBuilder);
-                for (FieldDeclaration item : oldFields) {
+                for (FieldDeclaration item : fields) {
+                    newLine(stringBuilder);
+                    item.getAnnotationByName("Column").ifPresent(p -> {
+                        item.getAnnotations().remove(p);
+                    });
+                    if (!item.isAnnotationPresent("Transient")) {
+                        item.addAnnotation("Transient");
+                    }
+                    String tip = "数据库没有此Column";
+                    if (item.hasJavaDocComment()) {
+                        item.getJavadocComment().ifPresent(p -> {
+                            if (!p.getContent().contains(tip)) {
+                                String newstr = p.getContent() + "\r\n" + tip;
+                                item.setJavadocComment(newstr);
+                            }
+                        });
+                    } else {
+                        item.setJavadocComment(tip);
+                    }
+
                     stringBuilder.append(item.toString());//可以格式化
                     newLine(stringBuilder);
                 }
-                newFileString = newFileString.substring(0, newFileString.lastIndexOf("}")) + stringBuilder.toString() + "}";
+                String fieldsString = stringBuilder.toString();
+                fieldsString = fieldsString.replaceAll("(?m)(.+)", "    $1");
+
+                newFileString = newFileString.substring(0, newFileString.lastIndexOf("}")) + fieldsString + "}";
 
             }
 
