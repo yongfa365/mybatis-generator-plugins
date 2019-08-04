@@ -38,95 +38,41 @@ public class JavaFileUtils {
             CompilationUnit newCompilationUnit = StaticJavaParser.parse(newFileString);
             CompilationUnit existingCompilationUnit = StaticJavaParser.parse(oldFileString);
 
-            //            CompilationUnit newCompilationUnit =new JavaParser().parse(topLevelClass.getFormattedContent()).getResult().get();
-            //            CompilationUnit existingCompilationUnit = new JavaParser().parse(oldFile).getResult().get();
+            //旧的有而新的没有的imports，复制给新的
+            NodeList<ImportDeclaration> oldimports = existingCompilationUnit.getImports();
+            oldimports.removeAll(existingCompilationUnit.getImports());
+            for (ImportDeclaration item : oldimports) {
+                newFileString = newFileString.replaceAll("package .*?\\r\\n", "$0\\r\\n" + item.toString());
+            }
 
-            //                        CompilationUnit newCompilationUnit = JavaParser.parse(topLevelClass.getFormattedContent());
-            //                        CompilationUnit existingCompilationUnit =  JavaParser.parse(oldFile);
 
-            newFileString = mergerFile(newCompilationUnit, existingCompilationUnit);
+            //旧的有而新的没有的Field，复制给新的
+            NodeList<TypeDeclaration<?>> newTypes = newCompilationUnit.getTypes();
+            NodeList<TypeDeclaration<?>> oldTypes = existingCompilationUnit.getTypes();
+
+            for (int i = 0; i < newTypes.size(); i++) {
+
+                //合并fields
+                List<FieldDeclaration> fields = newTypes.get(i).getFields();
+                List<FieldDeclaration> oldFields = oldTypes.get(i).getFields();
+                List<FieldDeclaration> newFields = new ArrayList<>();
+                HashSet<FieldDeclaration> fieldDeclarations = new HashSet<>();
+
+                oldFields.removeAll(newFields);
+                StringBuilder stringBuilder = new StringBuilder();
+                newLine(stringBuilder);
+                for (FieldDeclaration item : oldFields) {
+                    stringBuilder.append(item.toString());//可以格式化
+                    newLine(stringBuilder);
+                }
+                newFileString = newFileString.substring(0, newFileString.lastIndexOf("}")) + stringBuilder.toString() + "}";
+
+            }
+
             Files.write(oldFile.toPath(), newFileString.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-
-    public static String mergerFile(CompilationUnit newCompilationUnit, CompilationUnit existingCompilationUnit) {
-
-        StringBuilder sb = new StringBuilder(newCompilationUnit.getPackageDeclaration().get().toString());
-        newCompilationUnit.removePackageDeclaration();
-
-        //合并imports
-        NodeList<ImportDeclaration> imports = newCompilationUnit.getImports();
-        imports.addAll(existingCompilationUnit.getImports());
-        Set importSet = new HashSet<ImportDeclaration>();
-        importSet.addAll(imports);
-
-        NodeList<ImportDeclaration> newImports = new NodeList<>();
-        newImports.addAll(importSet);
-        newCompilationUnit.setImports(newImports);
-        for (ImportDeclaration i : newCompilationUnit.getImports()) {
-            sb.append(i.toString());
-        }
-        newLine(sb);
-        NodeList<TypeDeclaration<?>> newTypes = newCompilationUnit.getTypes();
-        NodeList<TypeDeclaration<?>> oldTypes = existingCompilationUnit.getTypes();
-
-        for (int i = 0; i < newTypes.size(); i++) {
-            //截取Class
-            String classNameInfo = newTypes.get(i).toString().substring(0, newTypes.get(i).toString().indexOf("{") + 1);
-            sb.append(classNameInfo);
-            newLine(sb);
-            newLine(sb);
-            //合并fields
-            List<FieldDeclaration> fields = newTypes.get(i).getFields();
-            List<FieldDeclaration> oldFields = oldTypes.get(i).getFields();
-            List<FieldDeclaration> newFields = new ArrayList<>();
-            HashSet<FieldDeclaration> fieldDeclarations = new HashSet<>();
-            fieldDeclarations.addAll(fields);
-            fieldDeclarations.addAll(oldFields);
-            newFields.addAll(fieldDeclarations);
-            for (FieldDeclaration f : newFields) {
-                sb.append(f.toString());
-                newLine(sb);
-                newLine(sb);
-            }
-
-            //合并methods
-            List<MethodDeclaration> methods = newTypes.get(i).getMethods();
-            List<MethodDeclaration> existingMethods = oldTypes.get(i).getMethods();
-            for (MethodDeclaration f : methods) {
-                sb.append(f.toString());
-                newLine(sb);
-                newLine(sb);
-            }
-            for (MethodDeclaration m : existingMethods) {
-                boolean flag = true;
-                for (String tag : MergeConstants.OLD_ELEMENT_TAGS) {
-                    if (m.toString().contains(tag)) {
-                        flag = false;
-                        break;
-                    }
-                }
-                if (flag) {
-                    sb.append(m.toString());
-                    newLine(sb);
-                    newLine(sb);
-                }
-            }
-
-            //判断是否有内部类
-            newTypes.get(i).getChildNodes();
-            for (Node n : newTypes.get(i).getChildNodes()) {
-                if (n.toString().contains("static class")) {
-                    sb.append(n.toString());
-                }
-            }
-
-        }
-
-        return sb.append(System.getProperty("line.separator") + "}").toString();
     }
 
 
