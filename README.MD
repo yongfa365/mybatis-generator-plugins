@@ -25,7 +25,7 @@ id|Url
         <plugin type="yongfa365.mybatis.generator.plugins.FixSqlServerCommentPlugin"/>
         
         <!--为Model加上Swagger的注解-->
-        <plugin type="yongfa365.mybatis.generator.plugins.SwaggerAnnotationPlugin"/>
+        <plugin type="yongfa365.mybatis.generator.plugins.lab.SwaggerAnnotationPlugin"/>
         
         <!--为Model加上Swagger2的注解-->
         <plugin type="yongfa365.mybatis.generator.plugins.Swagger2AnnotationPlugin"/>

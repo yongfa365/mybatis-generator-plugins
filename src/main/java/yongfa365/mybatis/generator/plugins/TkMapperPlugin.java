@@ -2,24 +2,16 @@ package yongfa365.mybatis.generator.plugins;
 
 import org.mybatis.generator.api.GeneratedXmlFile;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.ShellCallback;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
 import org.mybatis.generator.api.dom.java.Interface;
-import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
-import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.internal.DefaultShellCallback;
-import org.mybatis.generator.internal.DomWriter;
 import org.mybatis.generator.internal.util.StringUtility;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
 import yongfa365.mybatis.generator.Utils.ContextUtils;
-import yongfa365.mybatis.generator.Utils.JavaFileUtils;
-import yongfa365.mybatis.generator.Utils.XmlUtils;
 
 import java.io.File;
-import java.io.StringReader;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
@@ -27,12 +19,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-//代码摘自：https://github.com/abel533/Mapper/blob/master/generator/src/main/java/tk/mybatis/mapper/generator/FalseMethodPlugin.java
-public class TkMapperPlugin extends PluginAdapter {
+public class TkMapperPlugin extends FalseMethodPlugin {
     private Set<String> mappers = new HashSet<String>();
 
     //shellCallback use TargetProject and TargetPackage to get targetFile
     ShellCallback shellCallback = new DefaultShellCallback(false);
+
 
     @Override
     public void setProperties(Properties properties) {
@@ -53,20 +45,52 @@ public class TkMapperPlugin extends PluginAdapter {
     //=============================Model=============================
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        File modelFile = ContextUtils.getModelFile(context, introspectedTable);
-        System.out.println(modelFile);
-        if (modelFile.exists()) {
-            JavaFileUtils.mergerFile(context,topLevelClass,introspectedTable);
+        try {
+            String spliter4Model = "    //████████上面是自动生成的，改了会被覆盖，有需要可以添加到下面(不能用@Column,要加上@Transient)，此行不能删除████████";
+            Pattern importPattern = Pattern.compile("import\\s+(\\S+)", Pattern.MULTILINE);
 
-            //已经是最终的了，合并后返回false，其他插件就不会再走整个方法了
-            return false;
-        } else {
-            //文件不存在就走正常创建的逻辑
-            return true;
+            File modelFile = ContextUtils.getModelFile(context, introspectedTable);
+            String newFileString = topLevelClass.getFormattedContent();
+
+            if (modelFile.exists()) {
+                String oldFileString = ContextUtils.readAllString(modelFile.toPath());
+                //imports合并
+                {
+                    ArrayList<String> oldImports = new ArrayList<>();
+                    Matcher matcher = importPattern.matcher(oldFileString);
+                    while (matcher.find()) {
+                        oldImports.add(matcher.group(1));
+                    }
+
+                    ArrayList<String> newImports = new ArrayList<>();
+                    Matcher matcher2 = importPattern.matcher(newFileString);
+                    while (matcher2.find()) {
+                        newImports.add(matcher2.group(1));
+                    }
+                    oldImports.removeAll(newImports);
+                    for (String item : oldImports) {
+                        newFileString = newFileString.replaceAll("package .*", "$0\r\nimport " + item);
+                    }
+                }
+
+                //将旧文件的分割线后的内容 贴到 新文件最后的“}”之前
+                {
+                    oldFileString = oldFileString.replaceAll("[\\s\\S]+█████\r\n", "");
+                    newFileString = newFileString.substring(0, newFileString.lastIndexOf("}")) + spliter4Model + "\r\n" + oldFileString;
+                }
+            } else {
+                newFileString = newFileString.substring(0, newFileString.lastIndexOf("}")) + spliter4Model + "\r\n}";
+            }
+
+            Files.write(modelFile.toPath(), newFileString.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-
+        //已经是最终的了，合并后返回false，其他插件就不会再走整个方法了
+        return false;
     }
+
 
     //=============================DAO=============================
     @Override
@@ -93,39 +117,26 @@ public class TkMapperPlugin extends PluginAdapter {
         return true;
     }
 
+
     //=============================XML=============================
     //new nodes is generated,but not write on disk,we just need to filter.
     @Override
     public boolean sqlMapGenerated(GeneratedXmlFile sqlMap, IntrospectedTable introspectedTable) {
         try {
+            String spliter4Xml = "    <!--████████上面是自动生成的，改了会被覆盖，有需要可以添加到下面，此行不能删除████████-->";
+
             File directory = shellCallback.getDirectory(sqlMap.getTargetProject(), sqlMap.getTargetPackage());
             File xmlFile = new File(directory, sqlMap.getFileName());
-            if (!directory.exists() || !xmlFile.exists()) {
-                return true;
+
+            String newFileString = sqlMap.getFormattedContent();
+
+            if (xmlFile.exists()) {
+                String oldFileString = ContextUtils.readAllString(xmlFile.toPath());
+                oldFileString = oldFileString.replaceAll("[\\s\\S]+█████-->\r\n", "");
+                newFileString = newFileString.replace("</mapper>", spliter4Xml + "\r\n" + oldFileString);
+            } else {
+                newFileString = newFileString.replace("</mapper>", spliter4Xml + "\r\n</mapper>");
             }
-
-            String oldFileString = new String(Files.readAllBytes(xmlFile.toPath()), StandardCharsets.UTF_8);
-
-            Document newDoc = XmlUtils.getDocumentBuilder().parse(new InputSource(new StringReader(sqlMap.getFormattedContent())));
-            String newFileString = new DomWriter().toString(newDoc);
-
-            //新的有的就在旧的里删掉
-            Pattern reNewFile = Pattern.compile("<(\\S+)\\s+id=\"(\\S+)\"");
-            Matcher matcher = reNewFile.matcher(newFileString);
-            while (matcher.find()) {
-                String reOldFile = String.format("[\\S\\s]*?<%s\\s+id=\"%s\"[\\S\\s]+?</%1$s>(\r\n)*", matcher.group(1), matcher.group(2));
-                oldFileString = oldFileString.replaceAll(reOldFile, "");
-            }
-
-
-            //用新的内容除了最后一行外的，替换旧的里的文件的前半部分。
-            oldFileString = oldFileString.replaceAll("[\\S\\s]*?<mapper.+?>(\r\n)*", "");
-
-            String spliter = "上面是MBG自动生成的，不要改";
-            if (!oldFileString.contains(spliter)) {
-                oldFileString = "  <!-- ====================" + spliter + "==================== -->\r\n\r\n" + oldFileString;
-            }
-            newFileString = newFileString.replace("</mapper>", oldFileString);
 
             //MBG合并逻辑与我们预期不同，自行处理下原XML文件
             Files.write(xmlFile.toPath(), newFileString.getBytes(StandardCharsets.UTF_8));
@@ -133,148 +144,8 @@ public class TkMapperPlugin extends PluginAdapter {
             e.printStackTrace();
         }
 
-        //不使用MBG的合并逻辑，上面已经自行合并了
+        //已经是最终的了，合并后返回false，其他插件就不会再走整个方法了
         return false;
     }
 
-    //=============================其他一堆直接禁用=============================
-    @Override
-    public boolean clientDeleteByPrimaryKeyMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean clientInsertMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean clientInsertSelectiveMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean clientSelectByPrimaryKeyMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean clientUpdateByPrimaryKeySelectiveMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean clientUpdateByPrimaryKeyWithBLOBsMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean clientUpdateByPrimaryKeyWithoutBLOBsMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean clientDeleteByPrimaryKeyMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean clientInsertMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean clientInsertSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean clientSelectAllMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean clientSelectAllMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean clientSelectByPrimaryKeyMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean clientUpdateByPrimaryKeySelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean clientUpdateByPrimaryKeyWithBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean clientUpdateByPrimaryKeyWithoutBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean sqlMapDeleteByPrimaryKeyElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean sqlMapInsertElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean sqlMapInsertSelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean sqlMapSelectAllElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean sqlMapSelectByPrimaryKeyElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean sqlMapUpdateByPrimaryKeySelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean sqlMapUpdateByPrimaryKeyWithBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean sqlMapUpdateByPrimaryKeyWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean providerGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean providerApplyWhereMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean providerInsertSelectiveMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        return false;
-    }
-
-    @Override
-    public boolean providerUpdateByPrimaryKeySelectiveMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        return false;
-    }
 }
