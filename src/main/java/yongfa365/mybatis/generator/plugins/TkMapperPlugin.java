@@ -1,8 +1,10 @@
 package yongfa365.mybatis.generator.plugins;
 
 import org.mybatis.generator.api.GeneratedXmlFile;
+import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.ShellCallback;
+import org.mybatis.generator.api.dom.java.Field;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
 import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
@@ -21,6 +23,8 @@ import java.util.regex.Pattern;
 
 public class TkMapperPlugin extends FalseMethodPlugin {
     private Set<String> mappers = new HashSet<String>();
+    private boolean isGenColumnTypeWithJdbcType = false;
+    private boolean isMixModelImports = true;
 
     //shellCallback use TargetProject and TargetPackage to get targetFile
     ShellCallback shellCallback = new DefaultShellCallback(false);
@@ -30,6 +34,9 @@ public class TkMapperPlugin extends FalseMethodPlugin {
     public void setProperties(Properties properties) {
         super.setProperties(properties);
         String mappers = properties.getProperty("mappers");
+        isGenColumnTypeWithJdbcType = StringUtility.isTrue(properties.getProperty("isGenColumnTypeWithJdbcType"));
+        isMixModelImports = StringUtility.isTrue(properties.getProperty("isMixModelImports"));
+
         if (StringUtility.stringHasValue(mappers)) {
             this.mappers.addAll(Arrays.asList(mappers.split(",")));
         } else {
@@ -55,7 +62,7 @@ public class TkMapperPlugin extends FalseMethodPlugin {
             if (modelFile.exists()) {
                 String oldFileString = ContextUtils.readAllString(modelFile.toPath());
                 //imports合并
-                {
+                if (isMixModelImports) {
                     ArrayList<String> oldImports = new ArrayList<>();
                     Matcher matcher = importPattern.matcher(oldFileString);
                     while (matcher.find()) {
@@ -148,4 +155,21 @@ public class TkMapperPlugin extends FalseMethodPlugin {
         return false;
     }
 
+
+    //===============Field加@ColumnType(jdbcType = JdbcType.NVARCHAR)=================
+    @Override
+    public boolean modelFieldGenerated(Field field, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable, ModelClassType modelClassType) {
+        if (!isGenColumnTypeWithJdbcType) {
+            return true;
+        }
+
+        //加上后就跟MyBatis里的写法一样了：#{resourceID,jdbcType=BIGINT}
+        if (field.getAnnotations().stream().noneMatch(p -> p.contains("ColumnType"))) {
+            topLevelClass.addImportedType("org.apache.ibatis.type.JdbcType");
+            topLevelClass.addImportedType("tk.mybatis.mapper.annotation.ColumnType");
+            field.addAnnotation("@ColumnType(jdbcType = JdbcType." + introspectedColumn.getJdbcTypeName() + ")");
+        }
+        return true;
+    }
 }
+

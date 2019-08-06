@@ -18,7 +18,7 @@ id|Url
         <!--     <property name="deleteSqlMap" value="false"/>-->
         <!--     <property name="deleteJavaClient" value="false"/>-->
         <!-- </plugin>-->
-        <!--删除所有自动生成的目标目录里的文件，默认是全删除，一般要放在最前面-->
+        <!--删除所有自动生成的目标目录里的文件，默认是全删除，一般要放在最前面，如果使用融合方案在应注释掉这个-->
         <plugin type="yongfa365.mybatis.generator.plugins.DeleteGeneratedFilesPlugin"/>
         
         <!--MyBatis Generator 1.3.7还没有实现生成MSSQL  SqlServer备注，用插件填充上，之后再使用就有了，应该放的尽可能靠前-->
@@ -44,6 +44,17 @@ id|Url
             <property name="表一 Integer isApproved" value="审批状态"/>
             <property name="表二 Integer isApproved" value="审批状态"/>
         </plugin>
+
+        <!--集成tk 通用mapper，Model，SqlMap，DAO都是融合的：同一文件上面自动，下面手动-->
+        <plugin type="yongfa365.mybatis.generator.plugins.TkMapperPlugin">
+            <!--所有生成的Mapper都继承自这个设定，多个可以“,”隔开-->
+            <property name="mappers" value="hk.com.wot.dao.MyMapper"/>
+            <!-- Field加类似@ColumnType(jdbcType = JdbcType.NVARCHAR)，最终运行时效果：#{resourceID,jdbcType=BIGINT}-->
+            <property name="isGenColumnTypeWithJdbcType" value="false"/>
+            <!--是否融合Model新旧imports-->
+            <property name="isMixModelImports" value="true"/>
+        </plugin>
+
         
         <!--为Model加上javadoc，内容是数据库备注-->
         <commentGenerator type="yongfa365.mybatis.generator.plugins.DatabaseCommentGenerator">
