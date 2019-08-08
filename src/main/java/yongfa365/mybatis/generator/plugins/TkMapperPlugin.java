@@ -8,9 +8,12 @@ import org.mybatis.generator.api.dom.java.Field;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
 import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
+import org.mybatis.generator.api.dom.xml.Document;
+import org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.AbstractXmlElementGenerator;
 import org.mybatis.generator.internal.DefaultShellCallback;
 import org.mybatis.generator.internal.util.StringUtility;
 import yongfa365.mybatis.generator.Utils.ContextUtils;
+import yongfa365.mybatis.generator.Utils.SelectSelectiveElementGenerator;
 
 import java.io.File;
 import java.io.IOException;
@@ -137,6 +140,10 @@ public class TkMapperPlugin extends FalseMethodPlugin {
 
             String newFileString = sqlMap.getFormattedContent();
 
+            //默认每级缩进2个空格，改成4个
+            newFileString = newFileString.replaceAll("(?m)^ +", "$0$0");
+            newFileString = newFileString.replace(" />", "/>");
+
             if (xmlFile.exists()) {
                 String oldFileString = ContextUtils.readAllString(xmlFile.toPath());
                 oldFileString = oldFileString.replaceAll("[\\s\\S]+█████-->\r\n", "");
@@ -155,6 +162,16 @@ public class TkMapperPlugin extends FalseMethodPlugin {
         return false;
     }
 
+    @Override
+    public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
+        //添加个<select id="selectSelective"节点
+        AbstractXmlElementGenerator gen = new SelectSelectiveElementGenerator();
+        gen.setContext(context);
+        gen.setIntrospectedTable(introspectedTable);
+        gen.addElements(document.getRootElement());
+        super.sqlMapDocumentGenerated(document, introspectedTable);
+        return true;
+    }
 
     //===============Field加@ColumnType(jdbcType = JdbcType.NVARCHAR)=================
     @Override
