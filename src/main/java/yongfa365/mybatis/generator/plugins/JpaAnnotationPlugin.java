@@ -2,6 +2,7 @@ package yongfa365.mybatis.generator.plugins;
 
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
+import org.mybatis.generator.api.Plugin;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
 
@@ -111,10 +112,11 @@ public class JpaAnnotationPlugin extends PluginAdapter {
 
         //========================Fix PK （视图没有主键）===========================
         if (pkCount == 0) {
+            String pluginUrl="https://github.com/mybatis/generator/blob/master/core/mybatis-generator-core/src/main/java/org/mybatis/generator/plugins/VirtualPrimaryKeyPlugin.java";
             Optional<IntrospectedColumn> first = introspectedTable.getAllColumns().stream().findFirst();
             if (first.isPresent() && first.get().equals(introspectedColumn)) {
-                System.out.println("[WARN] No Id Add One! TableName:" + tableName + " ColumnName:" + columnName);
-                field.addAnnotation("@Id //没有主键但Jpa要，选择了他");
+                System.out.println("[WARN] No Id Add One! TableName:" + tableName + " ColumnName:" + columnName+" pls set by:"+ pluginUrl);
+                field.addAnnotation("@Id //没有主键但Jpa要，选择了他,请根据这个插件设置个："+pluginUrl);
             }
         }
 

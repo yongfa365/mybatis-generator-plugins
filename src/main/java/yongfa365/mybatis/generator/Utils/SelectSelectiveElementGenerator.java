@@ -29,7 +29,7 @@ public class SelectSelectiveElementGenerator extends AbstractXmlElementGenerator
         StringBuilder sb = new StringBuilder();
         sb.append("from ");
         sb.append(introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime());
-        sb.append(" where 1=1 ");
+        sb.append(" where 1=1");
         answer.addElement(new TextElement(sb.toString()));
 
         ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getNonPrimaryKeyColumns()).forEach(introspectedColumn -> {
@@ -77,6 +77,7 @@ public class SelectSelectiveElementGenerator extends AbstractXmlElementGenerator
             if (i < columns.size() - 1) {
                 sb.append(", ");
                 if (sb.length() > 80) {
+                    sb.setLength(sb.length()-1);
                     answer.addElement(new TextElement(sb.toString()));
                     sb.setLength(0);
                 }
