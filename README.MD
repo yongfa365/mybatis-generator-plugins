@@ -40,7 +40,7 @@ id|Url
         <plugin type="yongfa365.mybatis.generator.plugins.JpaAnnotationPlugin"/>
         
         <!--name要唯一，格式：类名 类型 字段名；value：备注-->
-        <plugin type="yongfa365.mybatis.generator.plugins.AddTransientFieldPlugin">
+        <plugin type="yongfa365.mybatis.generator.plugins.lab.AddTransientFieldPlugin">
             <property name="表一 Integer isApproved" value="审批状态"/>
             <property name="表二 Integer isApproved" value="审批状态"/>
         </plugin>

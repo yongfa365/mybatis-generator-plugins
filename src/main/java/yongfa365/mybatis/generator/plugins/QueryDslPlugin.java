@@ -4,45 +4,38 @@ import org.mybatis.generator.api.GeneratedJavaFile;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
-import org.mybatis.generator.config.Context;
-import org.mybatis.generator.internal.util.JavaBeansUtil;
 import org.mybatis.generator.internal.util.StringUtility;
 import yongfa365.mybatis.generator.Utils.RemarkUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 public class QueryDslPlugin extends PluginAdapter {
+    private String targetPackage;
+    private String targetProject;
+
 
     @Override
     public boolean validate(List<String> warnings) {
+        targetPackage = properties.getProperty("targetPackage");
+        targetProject = properties.getProperty("targetProject");
         return true;
     }
 
-    /**
-     * 生成额外java文件
-     */
     @Override
     public List<GeneratedJavaFile> contextGenerateAdditionalJavaFiles(IntrospectedTable introspectedTable) {
 
-        Context context = introspectedTable.getContext();
-
-        String basePackage = properties.getProperty("basePackage");
-        String apiProject = properties.getProperty("baseProject");
         List<GeneratedJavaFile> list = new ArrayList<>();
 
-        CompilationUnit unit = generateUnit(introspectedTable, basePackage);
-        GeneratedJavaFile genFile = new GeneratedJavaFile(unit, apiProject, this.context.getProperty("javaFileEncoding"), this.context.getJavaFormatter());
+        CompilationUnit unit = generateUnit(introspectedTable);
+        GeneratedJavaFile genFile = new GeneratedJavaFile(unit, targetProject, this.context.getProperty("javaFileEncoding"), this.context.getJavaFormatter());
         list.add(genFile);
 
         return list;
     }
 
-    private CompilationUnit generateUnit(IntrospectedTable introspectedTable,  String basePackage) {
+    private CompilationUnit generateUnit(IntrospectedTable introspectedTable) {
         String entityClazzType = introspectedTable.getBaseRecordType();
-        String destPackage = basePackage;
 
         String domainObjectName = introspectedTable.getFullyQualifiedTable().getDomainObjectName();
 
@@ -56,7 +49,7 @@ public class QueryDslPlugin extends PluginAdapter {
 
         TopLevelClass topLevelClass = new TopLevelClass(
                 builder.delete(0, builder.length())
-                        .append(destPackage)
+                        .append(targetPackage)
                         .append(".Q")
                         .append(domainObjectName)
                         .toString()
@@ -80,49 +73,46 @@ public class QueryDslPlugin extends PluginAdapter {
 
         //添加serialVersionUID字段
         Field field = new Field();
-        field.setFinal(true);    //添加final修饰
-        field.setInitializationString("233287413L"); //$NON-NLS-1$  赋值为1L
-        field.setName("serialVersionUID"); //$NON-NLS-1$    设置字段名称为serialVersionUID
-        field.setStatic(true);  //添加static关键字
-        field.setType(new FullyQualifiedJavaType("long")); //$NON-NLS-1$  声明类型
-        field.setVisibility(JavaVisibility.PRIVATE);//声明为私有
-        field.addJavaDocLine("/**");
-        field.addJavaDocLine(" * serialVersionUID");
-        field.addJavaDocLine(" */");
-        context.getCommentGenerator().addFieldComment(field, introspectedTable); //生成注解
+        field.setFinal(true);
+        field.setInitializationString("233287413L");
+        field.setName("serialVersionUID");
+        field.setStatic(true);
+        field.setType(new FullyQualifiedJavaType("long"));
+        field.setVisibility(JavaVisibility.PRIVATE);
+        context.getCommentGenerator().addFieldComment(field, introspectedTable);
         topLevelClass.addField(field);
 
         Field qfield = new Field();
         qfield.setFinal(true);
         qfield.setStatic(true);
-        qfield.setInitializationString("new Q"+domainObjectName+"(\""+toCamelCase(domainObjectName)+"\")");
+        qfield.setInitializationString("new Q" + domainObjectName + "(\"" + toCamelCase(domainObjectName) + "\")");
         qfield.setName(toCamelCase(domainObjectName));
-        qfield.setType(new FullyQualifiedJavaType("Q"+domainObjectName));
-        qfield.setVisibility(JavaVisibility.PUBLIC);//声明为私有
-        context.getCommentGenerator().addFieldComment(qfield, introspectedTable); //生成注解
+        qfield.setType(new FullyQualifiedJavaType("Q" + domainObjectName));
+        qfield.setVisibility(JavaVisibility.PUBLIC);
+        context.getCommentGenerator().addFieldComment(qfield, introspectedTable);
         topLevelClass.addField(qfield);
 
-        Method constructor = new Method("Q"+domainObjectName);
+        Method constructor = new Method("Q" + domainObjectName);
         constructor.setVisibility(JavaVisibility.PUBLIC);
         constructor.setConstructor(true);
         constructor.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "variable"));
-        constructor.addBodyLine("super("+domainObjectName+".class, forVariable(variable));");
+        constructor.addBodyLine("super(" + domainObjectName + ".class, forVariable(variable));");
         context.getCommentGenerator().addGeneralMethodComment(constructor, introspectedTable);
         topLevelClass.addMethod(constructor);
 
-        Method constructor2 = new Method("Q"+domainObjectName);
+        Method constructor2 = new Method("Q" + domainObjectName);
         constructor2.setVisibility(JavaVisibility.PUBLIC);
         constructor2.setConstructor(true);
-        constructor2.addParameter(new Parameter(new FullyQualifiedJavaType("Path<? extends "+domainObjectName+">"), "path"));
+        constructor2.addParameter(new Parameter(new FullyQualifiedJavaType("Path<? extends " + domainObjectName + ">"), "path"));
         constructor2.addBodyLine("super(path.getType(), path.getMetadata());");
         context.getCommentGenerator().addGeneralMethodComment(constructor2, introspectedTable);
         topLevelClass.addMethod(constructor2);
 
-        Method constructor3 = new Method("Q"+domainObjectName);
+        Method constructor3 = new Method("Q" + domainObjectName);
         constructor3.setVisibility(JavaVisibility.PUBLIC);
         constructor3.setConstructor(true);
         constructor3.addParameter(new Parameter(new FullyQualifiedJavaType("PathMetadata"), "metadata"));
-        constructor3.addBodyLine("super("+domainObjectName+".class, metadata);");
+        constructor3.addBodyLine("super(" + domainObjectName + ".class, metadata);");
         context.getCommentGenerator().addGeneralMethodComment(constructor3, introspectedTable);
         topLevelClass.addMethod(constructor3);
 
@@ -130,7 +120,7 @@ public class QueryDslPlugin extends PluginAdapter {
         return topLevelClass;
     }
 
-    private void addField(IntrospectedTable introspectedTable,TopLevelClass topLevelClass){
+    private void addField(IntrospectedTable introspectedTable, TopLevelClass topLevelClass) {
         introspectedTable.getAllColumns().forEach(column -> {
             String fieldName = column.getJavaProperty();
             Field field = new Field();
@@ -152,42 +142,42 @@ public class QueryDslPlugin extends PluginAdapter {
         });
     }
 
-    private Field setType(Field field, String fieldName, String typeName){
-        typeName = typeName.replace("java.lang.","");
+    private Field setType(Field field, String fieldName, String typeName) {
+        typeName = typeName.replace("java.lang.", "");
         String value = "";
         String type = typeName;
-        switch(typeName){
+        switch (typeName) {
             case "String":
-                value = "createString(\""+fieldName+"\")";
+                value = "createString(\"" + fieldName + "\")";
                 type = "StringPath";
                 break;
 
             case "Boolean":
-                value = "createBoolean(\""+fieldName+"\")";
+                value = "createBoolean(\"" + fieldName + "\")";
                 type = "BooleanPath";
                 break;
 
             case "java.time.LocalDate":
-                value = "createDate(\""+fieldName+"\", "+ typeName +".class)";
-                type = "DatePath<"+typeName+">";
+                value = "createDate(\"" + fieldName + "\", " + typeName + ".class)";
+                type = "DatePath<" + typeName + ">";
                 break;
 
             case "java.time.LocalDateTime":
-                value = "createDateTime(\""+fieldName+"\", "+ typeName +".class)";
-                type = "DateTimePath<"+typeName+">";
+                value = "createDateTime(\"" + fieldName + "\", " + typeName + ".class)";
+                type = "DateTimePath<" + typeName + ">";
                 break;
 
             case "Time":
-                value = "createTime(\""+fieldName+"\", "+ typeName +".class)";
-                type = "TimePath<"+typeName+">";
+                value = "createTime(\"" + fieldName + "\", " + typeName + ".class)";
+                type = "TimePath<" + typeName + ">";
                 break;
 
             case "Integer":
             case "Long":
             case "Double":
             case "java.math.BigDecimal":
-                value = "createNumber(\""+fieldName+"\", "+ typeName +".class)";
-                type = "NumberPath<"+typeName+">";
+                value = "createNumber(\"" + fieldName + "\", " + typeName + ".class)";
+                type = "NumberPath<" + typeName + ">";
                 break;
         }
 
@@ -197,7 +187,7 @@ public class QueryDslPlugin extends PluginAdapter {
     }
 
     private String getDomainName(IntrospectedTable introspectedTable) {
-        return introspectedTable.getRemarks() == null ?  introspectedTable.getFullyQualifiedTable().getDomainObjectName() : introspectedTable.getRemarks();
+        return introspectedTable.getRemarks() == null ? introspectedTable.getFullyQualifiedTable().getDomainObjectName() : introspectedTable.getRemarks();
     }
 
     private String toCamelCase(String s) {
