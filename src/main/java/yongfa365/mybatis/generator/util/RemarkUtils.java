@@ -1,4 +1,4 @@
-package yongfa365.mybatis.generator.Utils;
+package yongfa365.mybatis.generator.util;
 
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 
-public class RemarkUtil {
+public class RemarkUtils {
     private static HashMap<String, String> TABLE_COLUMN_COMMENTS = new HashMap<>();
 
     public static String getRemark(IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn) {

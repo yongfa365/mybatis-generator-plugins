@@ -14,8 +14,8 @@ import org.mybatis.generator.internal.DomWriter;
 import org.mybatis.generator.internal.util.StringUtility;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
-import yongfa365.mybatis.generator.Utils.ContextUtils;
-import yongfa365.mybatis.generator.Utils.XmlUtils;
+import yongfa365.mybatis.generator.util.ContextUtils;
+import yongfa365.mybatis.generator.util.XmlUtils;
 
 import java.io.File;
 import java.io.StringReader;

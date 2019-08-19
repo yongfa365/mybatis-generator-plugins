@@ -25,10 +25,10 @@ id|Url
         <plugin type="yongfa365.mybatis.generator.plugins.FixSqlServerCommentPlugin"/>
         
         <!--为Model加上Swagger的注解-->
-        <plugin type="yongfa365.mybatis.generator.plugins.lab.SwaggerAnnotationPlugin"/>
+        <plugin type="yongfa365.mybatis.generator.plugins.SwaggerAnnotationPlugin"/>
         
         <!--为Model加上Swagger2的注解-->
-        <plugin type="yongfa365.mybatis.generator.plugins.Swagger2AnnotationPlugin"/>
+        <plugin type="yongfa365.mybatis.generator.plugins.lab.Swagger2AnnotationPlugin"/>
         
         <!--为Model加上lombok的import及自己想在类上加的注解，都是以|分割-->
         <plugin type="yongfa365.mybatis.generator.plugins.LombokAnnotationPlugin">

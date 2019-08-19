@@ -13,7 +13,7 @@ import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
 import org.mybatis.generator.config.Context;
 import org.mybatis.generator.config.MergeConstants;
-import yongfa365.mybatis.generator.Utils.ContextUtils;
+import yongfa365.mybatis.generator.util.ContextUtils;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;

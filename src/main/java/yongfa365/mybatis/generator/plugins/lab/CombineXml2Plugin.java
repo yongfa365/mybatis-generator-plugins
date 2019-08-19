@@ -11,16 +11,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import yongfa365.mybatis.generator.Utils.XmlUtils;
+import yongfa365.mybatis.generator.util.XmlUtils;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
 import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.Iterator;

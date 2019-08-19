@@ -1,4 +1,4 @@
-package yongfa365.mybatis.generator.Utils;
+package yongfa365.mybatis.generator.util;
 
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.dom.xml.Attribute;

@@ -5,7 +5,7 @@ import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.Field;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
-import yongfa365.mybatis.generator.Utils.RemarkUtil;
+import yongfa365.mybatis.generator.util.RemarkUtils;
 
 import java.util.List;
 
@@ -13,20 +13,20 @@ public class FixSqlServerCommentPlugin extends PluginAdapter {
 
     @Override
     public boolean validate(List<String> list) {
-        RemarkUtil.generateTableColumnRemark(context);
+        RemarkUtils.generateTableColumnRemark(context);
         return true;
     }
 
 
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        introspectedTable.setRemarks(RemarkUtil.getRemark(introspectedTable, null));
+        introspectedTable.setRemarks(RemarkUtils.getRemark(introspectedTable, null));
         return true;
     }
 
     @Override
     public boolean modelFieldGenerated(Field field, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable, ModelClassType modelClassType) {
-        introspectedColumn.setRemarks(RemarkUtil.getRemark(introspectedTable, introspectedColumn));
+        introspectedColumn.setRemarks(RemarkUtils.getRemark(introspectedTable, introspectedColumn));
         return true;
     }
 

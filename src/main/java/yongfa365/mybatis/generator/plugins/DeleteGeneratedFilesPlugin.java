@@ -1,12 +1,11 @@
 package yongfa365.mybatis.generator.plugins;
 
 import org.mybatis.generator.api.PluginAdapter;
-import yongfa365.mybatis.generator.Utils.ContextUtils;
+import yongfa365.mybatis.generator.util.ContextUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 

@@ -12,8 +12,8 @@ import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.AbstractXmlElementGenerator;
 import org.mybatis.generator.internal.DefaultShellCallback;
 import org.mybatis.generator.internal.util.StringUtility;
-import yongfa365.mybatis.generator.Utils.ContextUtils;
-import yongfa365.mybatis.generator.Utils.SelectSelectiveElementGenerator;
+import yongfa365.mybatis.generator.util.ContextUtils;
+import yongfa365.mybatis.generator.util.SelectSelectiveElementGenerator;
 
 import java.io.File;
 import java.io.IOException;

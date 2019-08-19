@@ -5,7 +5,7 @@ import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.internal.util.StringUtility;
-import yongfa365.mybatis.generator.Utils.RemarkUtil;
+import yongfa365.mybatis.generator.util.RemarkUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -131,7 +131,7 @@ public class QueryDslPlugin extends PluginAdapter {
             String typeName = column.getFullyQualifiedJavaType().getFullyQualifiedNameWithoutTypeParameters();
             field = setType(field, fieldName, typeName);
 
-            String remarks = RemarkUtil.getRemark(introspectedTable, column);
+            String remarks = RemarkUtils.getRemark(introspectedTable, column);
             if (StringUtility.stringHasValue(remarks)) {
                 field.addJavaDocLine("/**");
                 field.addJavaDocLine(" * " + remarks);
